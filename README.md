@@ -285,6 +285,14 @@ After running `npx degit` and `npm install`, update these files to customize you
 **What:** Main page content  
 **Update:** Add your actual content or delete if not needed
 
+#### 7. `src/en/llm.md` (LLM summary)
+**What:** Short plain-text summary used to generate `/llm.txt` for LLMs  
+**Update:** Replace the example summary with a concise overview of your
+site (audience, key features, tone, and any constraints). This file is
+rendered into plain text and included in the built site at `/llm.txt` so keep
+it short and maintain it when your site or content strategy changes.
+
+
 ### 🎨 Assets (Replace Placeholders)
 
 #### 7. `src/assets/favicon.png`

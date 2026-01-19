@@ -31,8 +31,18 @@ module.exports = function (eleventyConfig) {
   // Basic passthrough copy for fonts
   eleventyConfig.addPassthroughCopy({ 'src/assets/fonts': 'assets/fonts' });
 
+
   // Add a simple filter
   eleventyConfig.addFilter('year', () => new Date().getFullYear());
+
+  // Add a date filter for Nunjucks (YYYY-MM-DD)
+  eleventyConfig.addFilter('date', function(dateObj) {
+    if (!dateObj) return '';
+    // If dateObj is a string, convert to Date
+    const d = typeof dateObj === 'string' ? new Date(dateObj) : dateObj;
+    if (isNaN(d)) return '';
+    return d.toISOString().slice(0, 10);
+  });
 
   // Posts collection (by convention)
   eleventyConfig.addCollection('posts', function (collectionApi) {
