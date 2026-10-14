@@ -1,0 +1,24 @@
+---
+layout: base
+eleventyExcludeFromCollections: true
+eleventyComputed:
+  title: "{{ i18n[lang].notFound.title }}"
+  description: "{{ i18n[lang].notFound.message }}"
+---
+{%- set strings = i18n[lang].notFound %}
+<div class="py-16 text-center">
+  <p class="text-7xl font-extrabold text-primary-500">404</p>
+  <h1 class="mt-4 text-2xl font-bold">{{ strings.title }}</h1>
+  <p class="mt-4 text-slate-600 dark:text-slate-400">{{ strings.message }}</p>
+  <a href="/{{ lang }}/" class="btn-primary mt-8">{{ strings.backHome }}</a>
+
+  {#- Links to the 404 page in the other languages #}
+  {%- set translations = ('/' + lang + '/404.html') | locale_links %}
+  {%- if translations.length %}
+  <p class="mt-8 text-sm space-x-4">
+    {%- for link in translations %}
+    <a href="{{ link.url }}" hreflang="{{ link.lang }}" lang="{{ link.lang }}" class="underline">{{ link.label }}</a>
+    {%- endfor %}
+  </p>
+  {%- endif %}
+</div>

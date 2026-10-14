@@ -1,0 +1,20 @@
+---
+# Redirects the root URL (/) to the default language.
+# On Apache, the generated .htaccess does this server-side; this page is the fallback for other hosts.
+layout: null
+permalink: /
+eleventyExcludeFromCollections: true
+---
+<!doctype html>
+<html lang="{{ site.defaultLanguage }}">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{ site.title }}</title>
+    <meta http-equiv="refresh" content="0; url=/{{ site.defaultLanguage }}/" />
+    <link rel="canonical" href="{{ site.url }}/{{ site.defaultLanguage }}/" />
+    <meta name="robots" content="noindex" />
+  </head>
+  <body>
+    <p><a href="/{{ site.defaultLanguage }}/">{{ site.title }}</a></p>
+  </body>
+</html>

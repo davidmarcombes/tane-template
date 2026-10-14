@@ -1,6 +1,34 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss" source("..");
+
+/* Theme generated from design-tokens.json (npm run tokens) */
+@import "./theme.css";
+
+/* Prose styles for Markdown content (.prose) */
+@plugin "@tailwindcss/typography";
+
+/* Class-based dark mode: add .dark to <html> (set by /assets/js/theme.js) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Hide Alpine elements until Alpine has started */
+[x-cloak] { display: none !important; }
+
+/* Native controls and scrollbars follow the theme */
+:root { color-scheme: light; }
+:root.dark { color-scheme: dark; }
+
+/*
+  Tailwind v4 changed the default border color to currentColor.
+  Keep the v3 default (gray-200) so plain `border` classes look the same.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+}
 
 /* Custom component layer */
 @layer components {
@@ -8,7 +36,7 @@
     @apply inline-block px-4 py-2 rounded font-semibold;
   }
   .btn-primary {
-    @apply btn bg-primary-500 text-white;
+    @apply inline-block px-4 py-2 rounded font-semibold bg-primary-500 text-white;
   }
 }
 

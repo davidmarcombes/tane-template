@@ -4,16 +4,37 @@ This file provides guidance for AI assistants working on this codebase.
 
 **Project-specific instructions and content details are in `SITE.md`** - always read that file first to understand the specific site you're working on.
 
+## Communication Style
+
+Be terse. Use as few words as possible.
+
+- Answer first; no preamble, no restating the request, no closing summary of what was just said
+- Short sentences or bullets, not paragraphs
+- Report results, not process: what changed, what was verified, what is left
+- Mention only problems or decisions that need the user's input
+- No filler ("Great question", "I'll now…", "Let me…"), no hedging, no repetition
+- Expand only when the user asks for detail
+
+## Reasoning
+
+Keep reasoning compressed.
+
+- Think in short notes, not prose; skip the obvious
+- Decide once: don't re-derive settled facts or re-argue choices already made
+- Don't enumerate options you won't pursue; pick the best one and move on
+- Stop reasoning when there is enough information to act
+- Spend effort on the hard part (ambiguity, risk, correctness), not on routine edits
+
 ## Tech Stack
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| **Eleventy (11ty)** | 2.0.1 | Static site generator |
-| **Tailwind CSS** | 3.4.0 | Utility-first CSS framework |
-| **Alpine.js** | 3.x (CDN) | Lightweight reactive interactivity |
+| **Eleventy (11ty)** | 3.x | Static site generator (ESM config) |
+| **Tailwind CSS** | 4.x | Utility-first CSS framework (CSS-first config, `@tailwindcss/cli`) |
+| **Alpine.js** | 3.x (CSP build, self-hosted) | Lightweight reactive interactivity |
 | **Nunjucks** | - | Templating engine |
-| **PostCSS** | 8.4.32 | CSS processing with Autoprefixer |
-| **@11ty/eleventy-img** | 4.0.2 | Image optimization |
+| **@11ty/eleventy-img** | 7.x | Image optimization |
+| **Node.js** | 22+ | Runtime (project is ES modules: `"type": "module"`) |
 
 ## Design System
 
@@ -26,10 +47,12 @@ This file contains:
 - Animation/transition definitions
 - Any other design values
 
-**The `tailwind.config.js` file is generated from `design-tokens.json`** and should not be edited directly. When making design changes:
+**`src/css/theme.css` is generated from `design-tokens.json`** (as a Tailwind v4 `@theme` block) and should not be edited directly. There is no `tailwind.config.js`. When making design changes:
 1. Update `design-tokens.json`
-2. Regenerate Tailwind config
+2. Regenerate the theme (`npm run tokens`)
 3. Rebuild CSS
+
+Token mapping: `colors.primary.500` → `--color-primary-500` (`bg-primary-500`), `typography.fonts.sans` → `--font-sans`, `typography.sizes.*` → `--text-*`, `spacing.unit` → `--spacing` (the base multiplier, so `p-4` = 4 × unit), other `spacing.*` → `--spacing-*`, `animations.*` → `--animate-*`, `keyframes.*` → `@keyframes`. Values must be CSS strings; anything else is skipped with a warning.
 
 ### Design Tokens Structure
 
@@ -61,48 +84,59 @@ This file contains:
 ```
 project-root/
 ├── design-tokens.json     # Design system source of truth
-├── tailwind.config.js     # Generated from design tokens
-├── .eleventy.js           # Eleventy configuration
-├── postcss.config.js      # PostCSS configuration
+├── eleventy.config.js     # Eleventy configuration (ESM)
 ├── package.json           # Dependencies and scripts
-├── CLAUDE.md              # This file - generic instructions
+├── AGENTS.md              # This file - generic instructions for AI assistants
+├── CLAUDE.md              # Imports AGENTS.md and SITE.md for Claude Code
 ├── SITE.md                # Project-specific instructions
 │
 └── src/
     ├── _data/             # Global data files
-    │   ├── site.json      # Site metadata, URLs, social links
-    │   └── navigation.json # Menu structure (keyed by language)
+    │   ├── site.json      # Site metadata, URLs, social links, defaultLanguage
+    │   ├── navigation.json # Menu structure (keyed by language)
+    │   └── i18n.json      # UI strings (keyed by language)
     │
     ├── _layouts/          # Page templates
     │   ├── base.njk       # Base HTML structure (SEO, header, footer)
     │   ├── home.njk       # Homepage layout
     │   ├── page.njk       # Standard page layout
     │   ├── post.njk       # Blog post layout
-    │   └── blog.njk       # Blog listing layout
+    │   ├── blog.njk       # Blog listing layout (posts of the page's language)
+    │   └── not-found.njk  # 404 page layout
     │
     ├── _includes/         # Reusable components
     │   ├── components/    # UI components (buttons, cards, forms)
     │   ├── sections/      # Page sections (hero, features, testimonials)
-    │   └── partials/      # Header, footer, navigation
+    │   └── partials/      # seo.njk (canonical, Open Graph, hreflang), structured-data.njk (JSON-LD)
     │
     ├── css/
-    │   └── input.css      # Tailwind entry point + custom components
+    │   ├── input.css      # Tailwind entry point + custom components
+    │   └── theme.css      # Generated from design tokens (git ignored)
     │
     ├── assets/            # Static files
     │   ├── images/        # Image files
+    │   ├── js/theme.js    # Dark mode: applied before paint + header toggle component
     │   ├── fonts/         # Web font files (if self-hosting)
-    │   └── favicon.png    # Favicon source
+    │   └── images/favicon.png # Favicon source (sizes generated at build time)
+    │
+    ├── index.njk          # Redirects / to the default language
+    ├── 404.njk            # Root 404 page (default language)
+    ├── sitemap.xml.njk    # Sitemap with hreflang alternates
+    ├── robots.txt.njk     # robots.txt
+    ├── htaccess.njk       # Apache config (/.htaccess): headers, caching, redirects
     │
     ├── en/                # English content (default language)
     │   ├── en.json        # Language config: { "lang": "en", "locale": "en-US" }
     │   ├── index.md       # Homepage content
-    │   ├── posts/         # Blog posts: YYYY-MM-DD-slug.md
+    │   ├── 404.md         # Language 404 page (permalink /en/404.html)
+    │   ├── posts/         # Blog posts: YYYY-MM-DD-slug.md → /en/blog/slug/
+    │   │   └── posts.json # Sets layout: post and the /{lang}/blog/{slug}/ permalink
     │   └── *.md           # Other pages (about, services, contact, etc.)
     │
     └── fr/                # French content (additional language)
         ├── fr.json        # Language config: { "lang": "fr", "locale": "fr-FR" }
         ├── index.md       # Homepage content (French)
-        ├── posts/         # Blog posts (French)
+        ├── posts/         # Blog posts (French), with its own posts.json
         └── *.md           # Other pages (French equivalents)
 
 _site/                     # Build output (git ignored)
@@ -118,15 +152,19 @@ Every site should follow this organization:
 - `services.md` - Services/offerings page
 - `contact.md` - Contact page
 - `blog.md` or `posts.md` - Blog listing page
+- `legal.md` - Legal notice (linked from the footer)
+- `privacy.md` - Privacy policy (linked from the footer)
 
 **Blog Posts** - In `/posts/` subdirectory:
 - Filename format: `YYYY-MM-DD-slug.md` (e.g., `2024-03-15-new-product-launch.md`)
-- Auto-collected by date
+- URL: `/{lang}/blog/{slug}/` (date prefix dropped), set by `posts/posts.json`, so posts sit in the Blog nav section
+- Auto-collected by date: `collections.posts` (all languages) and `collections.posts_{lang}` (one language)
 - Tagged for categorization
 
 **Data Files** - In `_data/`:
 - `site.json` - Site-wide metadata, company info, contact details
 - `navigation.json` - Menu structure
+- `i18n.json` - Translated UI strings used by layouts and components (skip link, footer, 404 page, blog), keyed by language
 - `team.json` - Team members (optional)
 - `testimonials.json` - Customer testimonials (optional)
 
@@ -157,14 +195,15 @@ This makes `lang` and `locale` variables available to all pages in that director
 
 ### Language-Aware Templates
 
-Templates reference the `{{ lang }}` variable for language-specific rendering:
+Templates reference the `{{ lang }}` variable for language-specific rendering, and `{{ i18n[lang] }}` for translated UI strings.
 
-```html
-<html lang="{{ lang }}">
-  <link rel="alternate" hreflang="en" href="{{ site.url }}/en{{ page.url }}">
-  <link rel="alternate" hreflang="fr" href="{{ site.url }}/fr{{ page.url }}">
-</html>
-```
+Eleventy's built-in **I18n plugin** links translations by file path: `src/en/about.md` and `src/fr/about.md` are the same page in two languages, even if their permalinks differ. The default language is `defaultLanguage` in `src/_data/site.json`. It provides:
+
+- `{{ page.url | locale_links }}` - the page's translations (`url`, `lang`, native-language `label`)
+- `{{ "/about/" | locale_url }}` - a URL in the current page's language
+- `{{ page.url | alternates }}` (custom filter) - hreflang list: the page, its translations and `x-default`
+
+**hreflang tags are generated automatically** in `partials/seo.njk` and in the sitemap, only for pages that have at least one translation. Don't hand-write them.
 
 ### Navigation Menus
 
@@ -192,23 +231,29 @@ When adding content:
 2. Create equivalent pages in all other language directories
 3. Keep URLs parallel: `/en/about/` and `/fr/about/`
 4. Update navigation in all languages
-5. Ensure hreflang alternates link correctly
+5. Keep the same file path in each language directory so translations are linked (hreflang is automatic)
+
+Shared pages linked from templates (e.g. `legal.md` and `privacy.md` in the footer) are linked by their **default-language URL** passed through `locale_url`: `{{ '/en/legal/' | locale_url }}` gives `/fr/legal/` on French pages. Translations are matched by file name, so the URL can be translated with `permalink` (e.g. `src/fr/legal.md` with `permalink: /fr/mentions-legales/`). If a language has no translation yet, the link falls back to the default-language page instead of breaking the build. Each language should still have its own `legal.md` and `privacy.md`.
 
 ### Language Switcher
 
-Implement a language switcher in the header/navigation that:
-- Detects current language from `{{ lang }}`
-- Links to equivalent page in other languages
-- Uses language codes or flags for UI
+Built into `components/header.njk` (desktop and mobile menu), using the `languageLinks` filter from `eleventy.config.js`:
+- Lists every language directory (`src/{lang}/{lang}.json`), labelled with its code and native name ("Français")
+- Links to the current page's translation, or to that language's homepage when there is none
+- Hidden when the site has only one language
+
+### Header Navigation
+
+`components/header.njk`: desktop nav from `md` up, Alpine mobile menu below (closes with Escape). The current page link gets `aria-current="page"`; its section is highlighted too (e.g. Blog on posts, because the post URL starts with the Blog URL).
 
 ## Configuration Files
 
 | File | Purpose |
 |------|---------|
-| `.eleventy.js` | Eleventy config: collections, filters, shortcodes, passthrough |
-| `tailwind.config.js` | **Generated from design-tokens.json** - do not edit manually |
+| `eleventy.config.js` | Eleventy config: collections, filters, shortcodes, passthrough |
+| `src/css/input.css` | Tailwind entry point: imports, dark-mode variant, custom components |
+| `src/css/theme.css` | **Generated from design-tokens.json** - do not edit manually |
 | `design-tokens.json` | Design system source of truth |
-| `postcss.config.js` | PostCSS plugins: Tailwind, Autoprefixer |
 | `package.json` | Dependencies and build scripts |
 | `SITE.md` | **Project-specific instructions** |
 
@@ -227,10 +272,10 @@ Development server runs at `http://localhost:8080` with live reload.
 
 ### CSS
 - **Utility-first approach**: Use Tailwind classes directly in templates
-- **Custom components**: Define in `src/css/input.css` using `@layer components`
+- **Custom components**: Define in `src/css/input.css` using `@layer components` (in v4, `@apply` only accepts utilities, not other custom classes)
 - **Class naming**: kebab-case (`.btn-primary`, `.card-header`)
-- **Design tokens**: All values come from `design-tokens.json` → Tailwind config
-- **Dark mode**: Class-based approach with `.dark` class on `<html>`
+- **Design tokens**: All values come from `design-tokens.json` → `src/css/theme.css` (`@theme`)
+- **Dark mode**: Class-based approach with `.dark` class on `<html>` (via `@custom-variant dark` in `input.css`)
 - **Responsive design**: Mobile-first with Tailwind breakpoints (sm, md, lg, xl, 2xl)
 
 ### Templates (Nunjucks)
@@ -238,13 +283,14 @@ Development server runs at `http://localhost:8080` with live reload.
 - **Reusable components**: Store in `_includes/components/` and import with `{% include %}`
 - **Data access**: Use `{{ site.title }}` for global data, `{{ title }}` for page data
 - **Language awareness**: Use `{{ lang }}` and `{{ locale }}` for multilingual features
-- **Filters**: Available Eleventy filters listed in `.eleventy.js`
+- **Filters**: Available Eleventy filters listed in `eleventy.config.js`
 
 ### Content (Markdown)
 - **Frontmatter**: YAML at top of each `.md` file for metadata
 - **Required fields**: `layout`, `title`, `lang`, `locale`
 - **Optional fields**: `description`, `date`, `tags`, `permalink`
-- **Content sections**: Can be defined in frontmatter for component-based layouts
+- **Content sections**: Can be defined in frontmatter for component-based layouts (e.g. `hero` and `features` in `index.md` for the `home` layout)
+- **No hardcoded text in templates**: Wording in layouts/components comes from `i18n[lang]` (UI labels) or page front matter (page copy), so every language gets its own text. When adding a UI string, add it for every language in `i18n.json`
 
 Example frontmatter:
 ```yaml
@@ -259,6 +305,8 @@ description: Learn about our company and mission
 
 ### Images
 - **Shortcode usage**: Use `{% image %}` for automatic optimization
+- **Arguments**: `{% image "src/assets/images/photo.jpg", "Alt text", "sizes", "class", "loading", "fetchpriority" %}` - only `src` and alt text are required
+- **Hero/LCP image**: pass `"eager", "high"` for loading and fetchpriority on the main above-the-fold image
 - **Output formats**: AVIF, WebP with fallbacks
 - **Responsive sizes**: Multiple widths generated automatically
 - **Loading strategy**: Lazy loading by default
@@ -270,7 +318,8 @@ description: Learn about our company and mission
 - **Declarative syntax**: Define behavior in HTML with `x-data`, `x-show`, etc.
 - **State management**: Simple component-level state, avoid complex global state
 - **Common patterns**: Dropdowns, modals, tabs, mobile menus, accordions, language switchers
-- **Dark mode toggle**: Stored in localStorage, class applied to `<html>`
+- **Dark mode toggle**: Button in the header. `src/assets/js/theme.js` (loaded without `defer` in `<head>`) applies the `.dark` class before first paint: the visitor's choice from localStorage (`theme` = `dark`/`light`), otherwise the system setting. It also registers the `themeToggle` Alpine component. Icons switch with `dark:` classes, not Alpine, so there is no flash
+- **CSP build**: Alpine is the `@alpinejs/csp` build, copied from `node_modules` to `/assets/js/alpine.min.js`, so it runs under a strict Content Security Policy (no `unsafe-eval`). Inline expressions support simple JavaScript (property access, assignments, comparisons, method calls); for anything more complex, register a component with `Alpine.data()` in a script file.
 
 ## Rules for Updates
 
@@ -285,7 +334,7 @@ description: Learn about our company and mission
 
 ### Design System Updates
 1. Edit `design-tokens.json` only
-2. Regenerate `tailwind.config.js` from tokens
+2. Regenerate `src/css/theme.css` from tokens (`npm run tokens`)
 3. Rebuild CSS with `npm run dev`
 4. Test changes across all pages and breakpoints
 5. Verify dark mode compatibility if applicable
@@ -324,11 +373,13 @@ description: Learn about our company and mission
 ### Adding New Languages
 1. Create new language directory: `src/{lang}/`
 2. Add `{lang}.json` with `lang` and `locale` values
-3. Copy all pages from existing language as templates
+3. Copy all pages from existing language as templates (including `legal.md`, `privacy.md`, `404.md` and `posts/posts.json`)
 4. Translate all content
 5. Add navigation menu to `_data/navigation.json`
-6. Update base layout hreflang alternates
-7. Add language to language switcher component
+6. Add UI strings to `_data/i18n.json`
+7. Add `src/{lang}/404.md` (copy `src/en/404.md` and change the permalink)
+
+The `posts_{lang}` collection and hreflang alternates are created automatically for any `src/{lang}/` directory containing `{lang}.json`. Restart the dev server after adding a language.
 
 ### Image Guidelines
 1. Place source images in `src/assets/images/`
@@ -351,22 +402,24 @@ description: Learn about our company and mission
 - Metadata defined in page frontmatter and `_data/site.json`
 - Open Graph and Twitter Card tags in base layout
 - Canonical URLs set per page
-- Hreflang alternates for all language versions
-- XML sitemap generated at `/sitemap.xml`
+- Hreflang alternates (with `x-default`) for pages that have translations
+- XML sitemap generated at `/sitemap.xml`, with hreflang alternates. `<lastmod>` is the page's front matter `date`, otherwise the file's last git commit (`date: "git Last Modified"` set globally in `eleventy.config.js`)
 - Robots.txt configured for crawlers
-- Structured data (JSON-LD) for rich results
+- Structured data (JSON-LD) for rich results: Organization, WebSite, WebPage, and BlogPosting on posts (from `site.json`)
+- Localized 404 pages (`/404.html` and `/{lang}/404.html`)
+- `/` redirects to the default language
 - Semantic HTML5 elements throughout
 - Proper heading hierarchy on all pages
 
 ## Performance Optimization
 
 - CSS purged of unused classes in production build
-- HTML minification (whitespace, comments removed)
+- HTML minification (whitespace, comments removed) in `npm run build`, not in the dev server
 - Images optimized to modern formats (AVIF, WebP)
 - Fonts preloaded or loaded asynchronously with `font-display: swap`
-- Minimal JavaScript footprint (Alpine.js CDN, ~15KB)
+- Minimal JavaScript footprint (Alpine.js self-hosted)
+- Favicons generated at build time in the needed sizes
 - Static HTML for fast initial page loads and SEO
-- Critical CSS inlined in `<head>` for above-the-fold content
 
 ## Accessibility Checklist
 
@@ -397,6 +450,10 @@ The site builds to `_site/` as static HTML/CSS/JS/assets.
 - Optimized images with modern formats
 - All static assets copied to `_site/`
 
+**Apache hosting:** `src/htaccess.njk` generates `/.htaccess` with security headers (strict CSP), caching, compression, the 404 page and the root redirect. Other hosts ignore it; use their own config (e.g. Netlify/Cloudflare `_headers`) or delete the file. Update the CSP if you add third-party scripts, styles or fonts.
+
+**Full git history required:** sitemap `<lastmod>` dates come from git. CI shallow clones (e.g. GitHub Actions' default `fetch-depth: 1`) give every page the same date; use `fetch-depth: 0` or the host's equivalent.
+
 **Environment variables** (if needed):
 - Document any required variables in SITE.md
 - Use `.env` file locally (git ignored)
@@ -406,10 +463,10 @@ The site builds to `_site/` as static HTML/CSS/JS/assets.
 
 ### Add a blog post
 1. Create `YYYY-MM-DD-post-title.md` in `src/{lang}/posts/`
-2. Add frontmatter: `layout: post`, `title`, `date`, `tags`, `lang`, `locale`
+2. Add frontmatter: `layout: post`, `title`, `description`, `date`, `tags` (`lang` and `locale` come from the directory's `{lang}.json`)
 3. Write content in Markdown
 4. Create equivalent post in other languages
-5. Post appears automatically in blog listing
+5. Post appears automatically in that language's blog listing (`collections.posts_{lang}`)
 
 ### Update site-wide data
 1. Edit `src/_data/site.json` for global settings
@@ -419,7 +476,7 @@ The site builds to `_site/` as static HTML/CSS/JS/assets.
 
 ### Modify design system
 1. Update `design-tokens.json` with new colors/fonts/spacing
-2. Regenerate `tailwind.config.js`
+2. Regenerate `src/css/theme.css` (`npm run tokens`)
 3. Rebuild CSS: `npm run dev`
 4. Update any hardcoded values in templates to use new tokens
 
@@ -439,7 +496,7 @@ The site builds to `_site/` as static HTML/CSS/JS/assets.
 ## Troubleshooting
 
 **CSS not updating:**
-- Ensure Tailwind is watching files: check `tailwind.config.js` content paths
+- Ensure Tailwind is watching files: sources are detected from `src/` (see `source("..")` in `input.css`; add `@source` for other paths)
 - Verify design tokens are properly formatted JSON
 - Clear browser cache or use hard reload
 - Restart dev server
@@ -448,7 +505,7 @@ The site builds to `_site/` as static HTML/CSS/JS/assets.
 **Images not optimizing:**
 - Verify image path is correct in shortcode
 - Check image exists in `src/assets/images/`
-- Review `.eleventy.js` image plugin configuration
+- Review `eleventy.config.js` image shortcode configuration
 - Ensure image file is a supported format (JPG, PNG, WebP)
 
 **Layout not applying:**
@@ -465,14 +522,13 @@ The site builds to `_site/` as static HTML/CSS/JS/assets.
 - Check `design-tokens.json` is valid JSON
 
 **Language switcher not working:**
-- Verify all language directories have matching page structure
-- Check hreflang alternates in base layout
-- Ensure URLs are parallel across languages
-- Confirm `navigation.json` has all languages defined
+- Switcher links to the homepage: the page has no translation with the same file name in that language
+- Switcher hidden: only one directory has a `{lang}.json`; restart the dev server after adding a language
+- Confirm `navigation.json` and `i18n.json` have all languages defined
 
 **Dark mode not toggling:**
-- Check inline script in `base.njk` runs before body
-- Verify localStorage key is consistent
+- Check `/assets/js/theme.js` loads in `<head>` without `defer`, before Alpine
+- Verify localStorage key is consistent (`theme`)
 - Ensure `.dark` class variants are defined in Tailwind
 - Test in different browsers (localStorage support)
 

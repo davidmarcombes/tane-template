@@ -13,6 +13,10 @@
             "url": "/en/services/"
         },
         {
+            "text": "Blog",
+            "url": "/en/blog/"
+        },
+        {
             "text": "Contact",
             "url": "/en/contact/"
         }

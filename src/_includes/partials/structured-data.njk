@@ -1,0 +1,48 @@
+{#- JSON-LD structured data (https://schema.org), built from src/_data/site.json -#}
+{%- set sameAs = [] %}
+{%- for name, url in site.social %}{% if url %}{% set _ = sameAs.push(url) %}{% endif %}{% endfor %}
+
+{%- set graph = [
+  {
+    "@type": "Organization",
+    "@id": site.url + "/#organization",
+    "name": site.author or site.title,
+    "url": site.url,
+    "logo": site.url + "/assets/images/logo.jpg",
+    "email": site.email,
+    "sameAs": sameAs
+  },
+  {
+    "@type": "WebSite",
+    "@id": site.url + "/#website",
+    "url": site.url,
+    "name": site.title,
+    "description": site.description,
+    "publisher": { "@id": site.url + "/#organization" }
+  },
+  {
+    "@type": "WebPage",
+    "@id": site.url + page.url + "#webpage",
+    "url": site.url + page.url,
+    "name": title or site.title,
+    "description": description or site.description,
+    "isPartOf": { "@id": site.url + "/#website" },
+    "inLanguage": locale or lang or site.defaultLanguage
+  }
+] %}
+
+{%- if ogType == "article" %}
+{%- set _ = graph.push({
+  "@type": "BlogPosting",
+  "@id": site.url + page.url + "#article",
+  "headline": title,
+  "description": description or site.description,
+  "datePublished": page.date | date,
+  "author": { "@id": site.url + "/#organization" },
+  "publisher": { "@id": site.url + "/#organization" },
+  "mainEntityOfPage": { "@id": site.url + page.url + "#webpage" },
+  "image": site.url + "/assets/images/share-image.jpg",
+  "inLanguage": locale or lang or site.defaultLanguage
+}) %}
+{%- endif %}
+  <script type="application/ld+json">{{ { "@context": "https://schema.org", "@graph": graph } | dump | replace("<", "\\u003c") | safe }}</script>

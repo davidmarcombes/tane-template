@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'node:fs';
+import path from 'node:path';
 
-const tokensPath = path.join(__dirname, '..', 'design-tokens.json');
-const outputPath = path.join(__dirname, '..', 'tailwind.config.js');
+const tokensPath = path.join(import.meta.dirname, '..', 'design-tokens.json');
+const outputPath = path.join(import.meta.dirname, '..', 'src', 'css', 'theme.css');
 
 // Read design tokens
 let tokens;
@@ -35,41 +35,74 @@ if (!tokens.typography || !tokens.typography.fonts) {
   };
 }
 
-// Generate Tailwind config (with helpful comments)
-const config = `/** @type {import('tailwindcss').Config} */
-// This file is auto-generated from design-tokens.json
-// Do not edit manually - run 'npm run tokens' to regenerate
-// If you need customizations, update design-tokens.json or extend this generator
-
-module.exports = {
-  content: [
-    './src/**/*.{html,njk,md,js}',
-    './src/**/*.svg'
-  ],
-  darkMode: 'class',
-  theme: {
-    extend: {
-      // Colors are generated from design-tokens.json
-      colors: ${JSON.stringify(tokens.colors || {}, null, 2)},
-      // Font families (object mapping like { sans: ['Inter', ...] })
-      fontFamily: ${JSON.stringify(tokens.typography?.fonts || {}, null, 2)},
-      // Optional tokens
-      fontSize: ${JSON.stringify(tokens.typography?.sizes || {}, null, 2)},
-      spacing: ${JSON.stringify(tokens.spacing || {}, null, 2)},
-      animation: ${JSON.stringify(tokens.animations || {}, null, 2)},
-      keyframes: ${JSON.stringify(tokens.keyframes || {}, null, 2)}
+// Flatten nested token groups into CSS custom properties,
+// e.g. { primary: { 500: '#005af0' } } -> --color-primary-500: #005af0;
+function toVars(prefix, group = {}) {
+  const lines = [];
+  for (const [key, value] of Object.entries(group)) {
+    if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+      lines.push(...toVars(`${prefix}-${key}`, value));
+    } else if (typeof value === 'string') {
+      lines.push(`  ${prefix}-${key}: ${value};`);
+    } else {
+      console.warn(`⚠️  Skipping ${prefix}-${key}: expected a CSS string value, got ${JSON.stringify(value)}`);
     }
-  },
-  // Add third-party plugins here if needed
-  plugins: []
-};
+  }
+  return lines;
+}
+
+// Font stacks: quote family names that contain spaces
+function fontStack(fonts) {
+  const list = Array.isArray(fonts) ? fonts : [fonts];
+  return list.map((f) => (/\s/.test(f) && !/^["']/.test(f) ? `"${f}"` : f)).join(', ');
+}
+
+const fontVars = Object.entries(tokens.typography?.fonts || {}).map(
+  ([name, fonts]) => `  --font-${name}: ${fontStack(fonts)};`
+);
+
+// spacing.unit is the base spacing multiplier in Tailwind v4 (p-4 = 4 * --spacing)
+const { unit: spacingUnit, ...namedSpacing } = tokens.spacing || {};
+const spacingVars = [
+  ...(spacingUnit ? [`  --spacing: ${spacingUnit};`] : []),
+  ...toVars('--spacing', namedSpacing)
+];
+
+// Keyframes are written as CSS objects: { fade: { from: { opacity: '0' }, to: { opacity: '1' } } }
+const keyframes = Object.entries(tokens.keyframes || {}).map(([name, frames]) => {
+  const steps = Object.entries(frames).map(([step, decls]) => {
+    const body = Object.entries(decls).map(([prop, val]) => `${prop}: ${val};`).join(' ');
+    return `    ${step} { ${body} }`;
+  });
+  return `  @keyframes ${name} {\n${steps.join('\n')}\n  }`;
+});
+
+const sections = [
+  ['Colors', toVars('--color', tokens.colors)],
+  ['Font families', fontVars],
+  ['Font sizes', toVars('--text', tokens.typography?.sizes)],
+  ['Spacing', spacingVars],
+  ['Animations', toVars('--animate', tokens.animations)],
+  ['Keyframes', keyframes]
+].filter(([, lines]) => lines.length > 0);
+
+// Generate Tailwind theme (with helpful comments)
+const css = `/*
+ * This file is auto-generated from design-tokens.json
+ * Do not edit manually - run 'npm run tokens' to regenerate
+ * If you need customizations, update design-tokens.json or extend this generator
+ */
+
+@theme {
+${sections.map(([label, lines]) => `  /* ${label} */\n${lines.join('\n')}`).join('\n\n')}
+}
 `;
 
-// Write Tailwind config
+// Write Tailwind theme
 try {
-    fs.writeFileSync(outputPath, config);
-    console.log('✅ Generated tailwind.config.js from design-tokens.json');
+  fs.writeFileSync(outputPath, css);
+  console.log('✅ Generated src/css/theme.css from design-tokens.json');
 } catch (error) {
-    console.error('❌ Error writing tailwind.config.js:', error.message);
-    process.exit(1);
+  console.error('❌ Error writing src/css/theme.css:', error.message);
+  process.exit(1);
 }

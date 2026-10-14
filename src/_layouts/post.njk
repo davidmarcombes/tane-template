@@ -1,9 +1,10 @@
 ---
 layout: base
+ogType: article
 ---
 
 <article class="prose dark:prose-invert max-w-none">
   <h1>{{ title }}</h1>
-  <p class="text-sm text-slate-500">{{ date }}</p>
+  <p class="text-sm text-slate-500"><time datetime="{{ page.date | date }}">{{ page.date | readableDate }}</time></p>
   {{ content | safe }}
 </article>

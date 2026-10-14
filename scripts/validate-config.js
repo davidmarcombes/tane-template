@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'node:fs';
+import path from 'node:path';
 
 // ANSI color codes for terminal output
 const colors = {
@@ -166,7 +166,7 @@ function checkDirectory(dir, baseDir = dir) {
 }
 
 function checkTemplateFiles() {
-    const projectRoot = path.join(__dirname, '..');
+    const projectRoot = path.join(import.meta.dirname, '..');
     const templateFiles = [
         'SITE.md.template',
         'src/_data/site.json.template',
@@ -188,7 +188,7 @@ function checkTemplateFiles() {
 // Main execution
 console.log(`\n${colors.cyan}🔍 Validating project configuration...${colors.reset}\n`);
 
-const projectRoot = path.join(__dirname, '..');
+const projectRoot = path.join(import.meta.dirname, '..');
 
 // Check for unrenamed template files
 const templateFiles = checkTemplateFiles();

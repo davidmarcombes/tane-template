@@ -118,7 +118,6 @@ Footer Navigation:
 - **Target Lighthouse Score:** [Desktop: 95+, Mobile: 95+]
 - **Core Web Vitals:** [Any specific requirements]
 - **Image Optimization:** [Automatic via @11ty/eleventy-img]
-- **Critical CSS:** [Inlined in head]
 
 ## Design System Customization
 
@@ -156,8 +155,8 @@ Using Tailwind defaults:
 ## Development Notes
 
 ### Browser Support
-- **Modern browsers:** Chrome, Firefox, Safari, Edge (latest 2 versions)
-- **Mobile:** iOS Safari 12+, Chrome Android
+- **Modern browsers:** Chrome/Edge 111+, Safari 16.4+, Firefox 128+ (Tailwind CSS 4 minimum)
+- **Mobile:** iOS Safari 16.4+, Chrome Android
 - **Legacy support:** [IE11 / No legacy support required]
 
 ## Deployment
@@ -166,7 +165,7 @@ Using Tailwind defaults:
 ```bash
 Build command: npm run build
 Publish directory: _site
-Node version: 18.x
+Node version: 22.x (or newer)
 ```
 
 ### Custom Domain

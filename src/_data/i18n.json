@@ -1,0 +1,24 @@
+{
+    "en": {
+        "skipToContent": "Skip to content",
+        "darkMode": "Dark mode",
+        "nav": {
+            "main": "Main",
+            "menu": "Menu",
+            "language": "Language"
+        },
+        "notFound": {
+            "title": "Page not found",
+            "message": "Sorry, the page you are looking for doesn't exist or has been moved.",
+            "backHome": "Back to home"
+        },
+        "blog": {
+            "noPosts": "No posts yet."
+        },
+        "footer": {
+            "legal": "Legal notice",
+            "privacy": "Privacy policy",
+            "sitemap": "Sitemap"
+        }
+    }
+}

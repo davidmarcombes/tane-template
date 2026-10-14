@@ -1,13 +1,68 @@
-<header class="border-b bg-white dark:bg-slate-800">
-  <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-    <a href="/" class="flex items-center gap-3">
-      <img src="/assets/images/logo.jpg" alt="{{ site.title }} logo" class="h-8 w-auto" />
+{%- set currentLang = lang or site.defaultLanguage %}
+{%- set strings = i18n[currentLang].nav %}
+{%- set languageLinks = page.url | languageLinks %}
+
+{#- Nav links; the current page gets aria-current, its section (e.g. Blog on a post) is highlighted too #}
+{%- macro navLinks(items, url, home, listClass, linkClass) %}
+<ul class="{{ listClass }}">
+  {%- for item in items %}
+  {%- set exact = url == item.url %}
+  {%- set inSection = item.url != home and url.startsWith(item.url) %}
+  <li><a href="{{ item.url }}" class="{{ linkClass }}{% if exact or inSection %} font-semibold text-primary-500{% endif %}"{% if exact %} aria-current="page"{% endif %}>{{ item.text }}</a></li>
+  {%- endfor %}
+</ul>
+{%- endmacro %}
+
+{#- Language switcher, only shown when the site has more than one language #}
+{%- macro languageSwitcher(links, label, listClass) %}
+{%- if links.length > 1 %}
+<ul class="{{ listClass }}" aria-label="{{ label }}">
+  {%- for link in links %}
+  <li><a href="{{ link.url }}" hreflang="{{ link.lang }}" lang="{{ link.lang }}" title="{{ link.label }}"
+         class="px-2 py-1 rounded text-sm uppercase {% if link.current %}font-semibold bg-slate-100 dark:bg-slate-700{% else %}hover:bg-slate-100 dark:hover:bg-slate-700{% endif %}"
+         {% if link.current %}aria-current="true"{% endif %}><span aria-hidden="true">{{ link.lang }}</span><span class="sr-only">{{ link.label }}</span></a></li>
+  {%- endfor %}
+</ul>
+{%- endif %}
+{%- endmacro %}
+
+<header x-data="{ open: false }" @keydown.escape.window="open = false" class="border-b bg-white dark:bg-slate-800">
+  <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
+    <a href="/{{ currentLang }}/" class="flex items-center gap-3">
+      <img src="/assets/images/logo.jpg" alt="" class="h-8 w-auto" />
       <span class="font-semibold">{{ site.title }}</span>
     </a>
-    <nav class="space-x-4">
-      {% for item in navigation[lang or 'en'] %}
-        <a href="{{ item.url }}" class="text-sm">{{ item.text }}</a>
-      {% endfor %}
+
+    <div class="flex items-center gap-4">
+      <nav aria-label="{{ strings.main }}" class="hidden md:block">
+        {{ navLinks(navigation[currentLang], page.url, '/' + currentLang + '/', 'flex gap-4', 'text-sm hover:text-primary-500') }}
+      </nav>
+
+      {{ languageSwitcher(languageLinks, strings.language, 'hidden md:flex gap-1') }}
+
+      {#- Dark mode toggle (logic in /assets/js/theme.js); icons switch via CSS so there is no flash #}
+      <button type="button" x-data="themeToggle" @click="toggle" :aria-pressed="dark"
+              aria-label="{{ i18n[currentLang].darkMode }}"
+              class="p-2 rounded text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700">
+        <svg class="w-5 h-5 dark:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+        <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+      </button>
+
+      {#- Mobile menu button #}
+      <button type="button" @click="open = !open" :aria-expanded="open" aria-controls="mobile-menu"
+              aria-label="{{ strings.menu }}"
+              class="md:hidden p-2 rounded text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700">
+        <svg x-show="!open" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        <svg x-show="open" x-cloak class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+  </div>
+
+  {#- Mobile menu #}
+  <div id="mobile-menu" x-show="open" x-cloak class="md:hidden border-t px-4 py-4 space-y-4">
+    <nav aria-label="{{ strings.main }}">
+      {{ navLinks(navigation[currentLang], page.url, '/' + currentLang + '/', 'space-y-1', 'block py-2 hover:text-primary-500') }}
     </nav>
+    {{ languageSwitcher(languageLinks, strings.language, 'flex gap-1') }}
   </div>
 </header>

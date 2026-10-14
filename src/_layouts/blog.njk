@@ -1,0 +1,19 @@
+---
+layout: base
+---
+
+<div class="prose dark:prose-invert max-w-none">
+  <h1>{{ title }}</h1>
+  {{ content | safe }}
+</div>
+
+{%- set posts = collections['posts_' + lang] %}
+{% for post in posts %}
+  <article class="mt-8">
+    <a class="text-xl font-semibold" href="{{ post.url }}">{{ post.data.title }}</a>
+    <div class="text-sm text-slate-500"><time datetime="{{ post.date | date }}">{{ post.date | readableDate }}</time></div>
+    <p class="mt-2">{{ post.data.description or (post.content | striptags | truncate(160)) }}</p>
+  </article>
+{% else %}
+  <p class="mt-8 text-slate-500">{{ i18n[lang].blog.noPosts }}</p>
+{% endfor %}

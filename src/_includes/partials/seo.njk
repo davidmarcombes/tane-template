@@ -1,0 +1,27 @@
+{#- Canonical, Open Graph, hreflang alternates and structured data -#}
+{%- set pageUrl = site.url + page.url %}
+  <link rel="canonical" href="{{ pageUrl }}" />
+
+  <!-- Open Graph / Twitter -->
+  <meta property="og:type" content="{{ ogType or 'website' }}" />
+  <meta property="og:url" content="{{ pageUrl }}" />
+  <meta property="og:site_name" content="{{ site.title }}" />
+  <meta property="og:title" content="{{ title or site.title }}" />
+  <meta property="og:description" content="{{ description or site.description }}" />
+  <meta property="og:image" content="{{ site.url }}/assets/images/share-image.jpg" />
+  {%- if locale %}
+  <meta property="og:locale" content="{{ locale | replace('-', '_') }}" />
+  {%- endif %}
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="{{ site.url }}/assets/images/share-image.jpg" />
+
+  {%- set alternates = page.url | alternates %}
+  {%- if alternates.length %}
+
+  <!-- Language alternates -->
+  {%- for link in alternates %}
+  <link rel="alternate" hreflang="{{ link.lang }}" href="{{ site.url }}{{ link.url }}" />
+  {%- endfor %}
+  {%- endif %}
+
+  {% include "partials/structured-data.njk" %}

@@ -1,0 +1,60 @@
+---
+# Apache configuration, written to /.htaccess.
+# Only Apache reads this file: other hosts (Netlify, Cloudflare Pages, Vercel, GitHub Pages)
+# ignore it and have their own config for headers and redirects. Delete this file if unused.
+layout: null
+permalink: /.htaccess
+eleventyExcludeFromCollections: true
+---
+# Generated from src/htaccess.njk - edit that file instead
+
+ErrorDocument 404 /404.html
+
+# Send the root URL to the default language
+<IfModule mod_alias.c>
+RedirectMatch 302 ^/$ /{{ site.defaultLanguage }}/
+</IfModule>
+
+# Security headers
+<IfModule mod_headers.c>
+# Content Security Policy: only this site's own scripts (Alpine.js is self-hosted, CSP build).
+# Google Fonts is allowed for styles and fonts; remove it if fonts are self-hosted.
+Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+Header always set X-Content-Type-Options "nosniff"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
+Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+Header always set Cross-Origin-Opener-Policy "same-origin"
+# HTTPS only. Add "; includeSubDomains; preload" only once every subdomain serves HTTPS.
+Header always set Strict-Transport-Security "max-age=31536000"
+</IfModule>
+
+# Browser caching
+<IfModule mod_expires.c>
+ExpiresActive On
+ExpiresDefault "access plus 1 day"
+
+# HTML, sitemap and robots: always revalidate so deploys show up immediately
+ExpiresByType text/html "access plus 0 seconds"
+ExpiresByType application/xml "access plus 0 seconds"
+ExpiresByType text/plain "access plus 0 seconds"
+
+# CSS and JS keep the same filenames between deploys, so cache them briefly
+ExpiresByType text/css "access plus 1 hour"
+ExpiresByType text/javascript "access plus 1 hour"
+ExpiresByType application/javascript "access plus 1 hour"
+
+# Images and fonts
+ExpiresByType image/avif "access plus 1 month"
+ExpiresByType image/webp "access plus 1 month"
+ExpiresByType image/jpeg "access plus 1 month"
+ExpiresByType image/png "access plus 1 month"
+ExpiresByType image/gif "access plus 1 month"
+ExpiresByType image/svg+xml "access plus 1 month"
+ExpiresByType font/woff2 "access plus 1 year"
+ExpiresByType font/woff "access plus 1 year"
+</IfModule>
+
+# Compression
+<IfModule mod_deflate.c>
+AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript application/javascript application/json application/ld+json application/xml image/svg+xml
+</IfModule>

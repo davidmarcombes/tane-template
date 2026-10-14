@@ -4,11 +4,10 @@ A production-ready starter template for building fast, modern marketing websites
 
 ## Stack
 
-- **Eleventy 2.0** - Static site generator
-- **Tailwind CSS 3.4** - Utility-first CSS framework
-- **Alpine.js 3.x** - Lightweight JavaScript framework
+- **Eleventy 3** - Static site generator
+- **Tailwind CSS 4** - Utility-first CSS framework
+- **Alpine.js 3.x** - Lightweight JavaScript framework (CSP build, self-hosted)
 - **Eleventy** - Templating engine
-- **PostCSS** - CSS processing with Autoprefixer
 - **Eleventy Image** - Automatic image optimization
 
 ## Features
@@ -16,8 +15,13 @@ A production-ready starter template for building fast, modern marketing websites
 ✅ Design token system with JSON configuration  
 ✅ Multilingual support out of the box  
 ✅ Automatic image optimization (AVIF, WebP)  
-✅ Dark mode support  
-✅ SEO optimized with meta tags, sitemap, robots.txt  
+✅ Responsive header: mobile menu, current-page highlight, language switcher  
+✅ Dark mode with header toggle (follows system setting until changed)  
+✅ Legal notice and privacy policy page shells, linked from the footer  
+✅ SEO optimized: canonical, Open Graph, hreflang, JSON-LD, sitemap, robots.txt  
+✅ Localized 404 pages  
+✅ Favicons generated at build time  
+✅ Optional Apache `.htaccess` with security headers and caching  
 ✅ Performance optimized (95+ Lighthouse scores)  
 ✅ Accessible HTML5 semantic markup  
 ✅ Blog-ready with post collections  
@@ -77,13 +81,13 @@ npm run validate
 
 Notes: `npm run validate` will scan the repo for common placeholder values. It treats placeholders in configuration files (e.g., `SITE.md` and files in `src/_data/`) as critical and exits with an error when they are present. Placeholders in documentation or example content are reported as warnings only.
 
-### Generate Tailwind Config
+### Generate Tailwind Theme
 
 ```bash
 npm run tokens
 ```
 
-This generates `tailwind.config.js` from your design tokens.
+This generates `src/css/theme.css` (a Tailwind v4 `@theme` block) from your design tokens.
 
 ### Start Development
 
@@ -100,28 +104,31 @@ project-root/
 ├── AGENTS.md              # AI assistant instructions (generic)
 ├── SITE.md                # Project-specific documentation
 ├── design-tokens.json     # Design system source of truth
-├── tailwind.config.js     # Generated from design tokens
-├── .eleventy.js           # Eleventy configuration
+├── eleventy.config.js     # Eleventy configuration (ESM)
 ├── package.json
 │
 └── src/
     ├── _data/             # Global data
     │   ├── site.json      # Site metadata
-    │   └── navigation.json # Menu structure
+    │   ├── navigation.json # Menu structure
+    │   └── i18n.json      # UI strings per language
     │
     ├── _layouts/          # Page templates
     │   ├── base.njk       # Base HTML (SEO, header, footer)
     │   ├── home.njk       # Homepage layout
     │   ├── page.njk       # Standard page layout
-    │   └── post.njk       # Blog post layout
+    │   ├── post.njk       # Blog post layout
+    │   ├── blog.njk       # Blog listing layout
+    │   └── not-found.njk  # 404 page layout
     │
     ├── _includes/         # Reusable components
     │   ├── components/    # UI components
     │   ├── sections/      # Page sections
-    │   └── partials/      # Header, footer, nav
+    │   └── partials/      # SEO tags, structured data
     │
     ├── css/
-    │   └── input.css      # Tailwind + custom styles
+    │   ├── input.css      # Tailwind + custom styles
+    │   └── theme.css      # Generated from design tokens (git ignored)
     │
     ├── assets/
     │   ├── images/
@@ -133,7 +140,11 @@ project-root/
         ├── about.md
         ├── services.md
         ├── contact.md
-        └── posts/         # Blog posts
+        ├── blog.md
+        ├── legal.md       # Legal notice
+        ├── privacy.md     # Privacy policy
+        ├── 404.md
+        └── posts/         # Blog posts (URL: /en/blog/slug/)
 ```
 
 ## Essential Commands
@@ -142,7 +153,7 @@ project-root/
 npm run dev          # Development server with live reload
 npm run build        # Production build
 npm run clean        # Remove _site/ directory
-npm run tokens       # Generate Tailwind config from design tokens
+npm run tokens       # Generate Tailwind theme from design tokens
 npm run init         # Initialize new project (interactive)
 npm run validate     # Validate configuration
 ```
@@ -184,12 +195,11 @@ description: SEO description
 layout: post
 title: Post Title
 date: 2024-03-15
+description: Short summary for listings and SEO
 tags: [tag1, tag2]
-lang: en
-locale: en-US
 ---
 ```
-3. Post appears automatically in blog listing
+3. Post appears automatically in the blog listing for its language
 
 ### Add a New Language
 
@@ -204,12 +214,14 @@ locale: en-US
 3. Copy all pages from `src/en/` to `src/{lang}/`
 4. Translate content
 5. Add navigation to `src/_data/navigation.json`
-6. Update hreflang alternates in `src/_layouts/base.njk`
+6. Add UI strings to `src/_data/i18n.json`
+
+hreflang alternates, the sitemap and the `posts_{lang}` collection pick up the new language automatically.
 
 ### Customize Design System
 
 1. Edit `design-tokens.json`
-2. Run `npm run tokens` to regenerate Tailwind config
+2. Run `npm run tokens` to regenerate the Tailwind theme
 3. Rebuild: `npm run dev`
 
 ### Add Custom Component
@@ -265,8 +277,10 @@ After running `npx degit` and `npm install`, update these files to customize you
 - `title`: Your site name
 - `description`: SEO description
 - `url`: Production URL
-- `email`, `phone`: Contact details
-- `social`: Social media handles
+- `author`: Company/organization name (used in structured data)
+- `email`: Contact email
+- `defaultLanguage`: Language that `/` redirects to and `x-default` points at (e.g. `en`)
+- `social`: Full profile URLs (used in structured data `sameAs`); leave empty to omit
 
 #### 4. `src/_data/navigation.json`
 **What:** Menu structure for all languages  
@@ -295,9 +309,9 @@ it short and maintain it when your site or content strategy changes.
 
 ### 🎨 Assets (Replace Placeholders)
 
-#### 7. `src/assets/favicon.png`
-**What:** Browser favicon/icon  
-**Update:** Replace with your brand's favicon
+#### 7. `src/assets/images/favicon.png`
+**What:** Browser favicon/icon (16, 32, 180 and 192px versions are generated at build time)  
+**Update:** Replace with your brand's favicon, ideally a square PNG of at least 192px
 
 #### 8. `src/assets/images/logo.png`
 **What:** Site logo  
@@ -325,16 +339,17 @@ it short and maintain it when your site or content strategy changes.
 ### ✅ After Updates, Run:
 
 ```bash
-npm run tokens    # Generate Tailwind config from design tokens
+npm run tokens    # Generate Tailwind theme from design tokens
 npm run dev       # Start development server
 ```
 
 ## Browser Support
 
-- Chrome, Firefox, Safari, Edge (latest 2 versions)
-- iOS Safari 12+
-- Chrome Android
-- Progressive enhancement for older browsers
+Tailwind CSS 4 targets modern browsers only:
+
+- Chrome / Edge 111+
+- Safari / iOS Safari 16.4+
+- Firefox 128+
 
 ## Performance
 

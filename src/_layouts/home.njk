@@ -2,12 +2,27 @@
 layout: base
 ---
 
-{% include "components/hero.njk" with { title: ('Welcome to ' ~ site.title), description: site.description, cta_url: '/en/contact/', cta_text: 'Contact us' } %}
+{#- Homepage copy comes from the page's front matter (`hero`, `features`), so each language has its own #}
+{#- Nunjucks includes see the variables set in the including template #}
+{%- set heroTitle = hero.title %}
+{%- set heroText = hero.text %}
+{%- set cta_url = hero.ctaUrl %}
+{%- set cta_text = hero.ctaText %}
+{% include "components/hero.njk" %}
 
+{% if features %}
 <section class="py-8">
   <div class="grid md:grid-cols-3 gap-6">
-    <div class="p-6 border rounded">Feature 1</div>
-    <div class="p-6 border rounded">Feature 2</div>
-    <div class="p-6 border rounded">Feature 3</div>
+    {%- for feature in features %}
+    <div class="p-6 border rounded">
+      <h2 class="font-semibold">{{ feature.title }}</h2>
+      {%- if feature.text %}
+      <p class="mt-2 text-slate-600 dark:text-slate-400">{{ feature.text }}</p>
+      {%- endif %}
+    </div>
+    {%- endfor %}
   </div>
 </section>
+{% endif %}
+
+{{ content | safe }}

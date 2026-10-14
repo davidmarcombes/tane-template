@@ -18,7 +18,7 @@ dist/
 .env.*.local
 
 # Generated files
-tailwind.config.js
+src/css/theme.css
 
 # OS files
 .DS_Store

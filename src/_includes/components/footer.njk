@@ -1,10 +1,15 @@
+{%- set strings = i18n[lang or site.defaultLanguage].footer %}
 <footer class="border-t mt-12 py-8 bg-white dark:bg-slate-800">
   <div class="max-w-6xl mx-auto px-4 text-sm text-slate-600 dark:text-slate-400">
     <div class="flex justify-between items-center">
       <div>© {{ site.title }} {{ site | year }}</div>
-      <div>
-        <a href="/sitemap.xml" class="mr-4">Sitemap</a>
-        <a href="/privacy/">Privacy</a>
+      <div class="space-x-4">
+        {#- Start from the default language URL: locale_url swaps in this language's translation
+            (matched by file name, so translated permalinks work) or keeps the default if there is none #}
+        {%- set base = '/' + site.defaultLanguage %}
+        <a href="{{ (base + '/legal/') | locale_url }}">{{ strings.legal }}</a>
+        <a href="{{ (base + '/privacy/') | locale_url }}">{{ strings.privacy }}</a>
+        <a href="/sitemap.xml">{{ strings.sitemap }}</a>
       </div>
     </div>
   </div>

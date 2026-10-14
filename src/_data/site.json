@@ -4,9 +4,10 @@
     "url": "https://www.example.com",
     "author": "Company Name",
     "email": "contact@example.com",
+    "defaultLanguage": "en",
     "social": {
-        "twitter": "@handle",
-        "linkedin": "company-name",
-        "facebook": "company-name"
+        "twitter": "https://x.com/your-username",
+        "linkedin": "https://www.linkedin.com/company/company-name",
+        "facebook": "https://www.facebook.com/company-name"
     }
 }

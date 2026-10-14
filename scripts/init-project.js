@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
-const path = require('path');
-const readline = require('readline');
+import fs from 'node:fs';
+import path from 'node:path';
+import readline from 'node:readline';
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -14,8 +14,8 @@ function question(prompt) {
 }
 
 function renameIfExists(from, to) {
-    const fromPath = path.join(__dirname, '..', from);
-    const toPath = path.join(__dirname, '..', to);
+    const fromPath = path.join(import.meta.dirname, '..', from);
+    const toPath = path.join(import.meta.dirname, '..', to);
 
     if (fs.existsSync(fromPath)) {
         fs.renameSync(fromPath, toPath);
@@ -26,7 +26,7 @@ function renameIfExists(from, to) {
 }
 
 function updateJsonFile(filePath, updates) {
-    const fullPath = path.join(__dirname, '..', filePath);
+    const fullPath = path.join(import.meta.dirname, '..', filePath);
 
     if (!fs.existsSync(fullPath)) {
         console.log(`⚠ Warning: ${filePath} not found, skipping...`);
@@ -87,7 +87,7 @@ async function init() {
     });
 
     // Update design tokens
-    const tokensPath = path.join(__dirname, '..', 'design-tokens.json');
+    const tokensPath = path.join(import.meta.dirname, '..', 'design-tokens.json');
     if (fs.existsSync(tokensPath)) {
         try {
             const tokens = JSON.parse(fs.readFileSync(tokensPath, 'utf8'));
@@ -109,7 +109,7 @@ async function init() {
 
     // Clean up unused languages
     if (enableFrench.toLowerCase() !== 'y') {
-        const frPath = path.join(__dirname, '..', 'src/fr');
+        const frPath = path.join(import.meta.dirname, '..', 'src/fr');
         if (fs.existsSync(frPath)) {
             fs.rmSync(frPath, { recursive: true, force: true });
             console.log('✓ Removed French language directory');
@@ -118,7 +118,7 @@ async function init() {
 
     // Clean up blog if not needed
     if (enableBlog.toLowerCase() !== 'y') {
-        const postsPath = path.join(__dirname, '..', 'src/en/posts');
+        const postsPath = path.join(import.meta.dirname, '..', 'src/en/posts');
         if (fs.existsSync(postsPath)) {
             fs.rmSync(postsPath, { recursive: true, force: true });
             console.log('✓ Removed blog/posts directory');
@@ -126,7 +126,7 @@ async function init() {
     }
 
     // Update SITE.md with basic info
-    const sitemdPath = path.join(__dirname, '..', 'SITE.md');
+    const sitemdPath = path.join(import.meta.dirname, '..', 'SITE.md');
     if (fs.existsSync(sitemdPath)) {
         let siteMd = fs.readFileSync(sitemdPath, 'utf8');
         siteMd = siteMd
@@ -143,7 +143,7 @@ async function init() {
     console.log('Next steps:');
     console.log('  1. Review and complete SITE.md with additional details');
     console.log('  2. Add your logo and favicon to src/assets/');
-    console.log('  3. Run: npm run tokens (generate Tailwind config)');
+    console.log('  3. Run: npm run tokens (generate Tailwind theme)');
     console.log('  4. Run: npm run dev (start development server)');
     console.log('\n📚 See README.md for the complete customization checklist.\n');
 
